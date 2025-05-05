@@ -24,28 +24,38 @@ A modular Python microservice (micro SaaS) for near-realtime audio monitoring, t
 
 ## User File Handling & Privacy
 
-**User contact files (`users.json`, `users.dev.json`) are NOT tracked in version control and reside in the `app/users/data/` directory.**
+**User contact files (`users.json`, `users.dev.json`) are NOT tracked in version control and reside in the `app/data/users/` directory, which is inside the persistent disk root (`/app/data`) on Render.**
 
 ### Local Development
-- Use `app/users/data/users.example.json` or `users.dev.example.json` as a template.
+- Use `app/data/users/users.example.json` or `users.dev.example.json` as a template.
 - Copy the relevant example file:
   ```sh
-  cp app/users/data/users.example.json app/users/data/users.json
+  cp app/data/users/users.example.json app/data/users/users.json
   # or for dev
-  cp app/users/data/users.dev.example.json app/users/data/users.dev.json
+  cp app/data/users/users.dev.example.json app/data/users/users.dev.json
   ```
 - Fill in your info (email, phone, zones, etc.) in your copy.
 - **Do not commit your real user files**—they are gitignored for privacy.
 
 ### Production (Render)
-- **Persistent Disk:** Mount a persistent disk at `/app/app/users/data` in your Render service settings.
-- **After Deploy:** Use the Render shell or SCP to upload your real `users.json` to `/app/app/users/data/`.
+- **Persistent Disk:** Mount a persistent disk at `/app/data` in your Render service settings.
+- **After Deploy:** Use the Render shell or SCP to upload your real `users.json` to `/app/data/users/`.
   - Example:
     ```sh
-    scp app/users/data/users.json srv-<id>@ssh.<region>.render.com:/app/app/users/data/users.json
+    scp app/data/users/users.json srv-<id>@ssh.<region>.render.com:/app/data/users/users.json
     ```
 - Your user file will persist across deploys and restarts.
 - If the user file is missing, the app will warn you at startup and not send alerts.
+
+### Directory Structure Example
+```
+/app/data/
+  ├── users/
+  │    ├── users.json
+  │    └── users.dev.json
+  ├── audio/
+  └── transcripts/
+```
 
 ### Templates & Security
 - Example/template files are provided and tracked for onboarding.
