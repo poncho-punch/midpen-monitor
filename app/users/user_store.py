@@ -3,24 +3,29 @@ import os
 from datetime import datetime
 from typing import List, Optional
 
+import json
+import os
+from datetime import datetime
+from typing import List, Optional
+import logging
+
+logger = logging.getLogger("users.user_store")
+env = os.environ.get("ALERT_ENV", "PROD").upper()
+if env == "DEV":
+    users_file = "users.dev.json"
+else:
+    users_file = "users.json"
+data_dir = "/app/data/users"
+os.makedirs(data_dir, exist_ok=True)
+USERS_PATH = os.path.join(data_dir, users_file)
+
 def load_users() -> List[dict]:
-    import logging
-    logger = logging.getLogger("users.user_store")
-    env = os.environ.get("ALERT_ENV", "PROD").upper()
-    if env == "DEV":
-        users_file = "users.dev.json"
-    else:
-        users_file = "users.json"
-    # Use /app/app/users/data for persistent user files
-    data_dir = os.path.join(os.path.dirname(__file__), "data")
-    os.makedirs(data_dir, exist_ok=True)
-    USERS_PATH = os.path.join(data_dir, users_file)
     logger.info(f"[UserStore] Loading users from: {USERS_PATH}")
     if not os.path.exists(USERS_PATH):
         logger.warning(f"[UserStore] User file not found: {USERS_PATH}")
         print(f"\n[WARNING] User file not found: {USERS_PATH}\n"
               f"Please create this file with your user/contact info.\n"
-              f"You can copy app/users/{users_file.replace('.json', '.example.json')} as a template.\n")
+              f"You can copy app/data/users/{users_file.replace('.json', '.example.json')} as a template.\n")
         return []
     with open(USERS_PATH, 'r') as f:
         try:
