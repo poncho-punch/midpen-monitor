@@ -26,15 +26,30 @@ A modular Python microservice (micro SaaS) for near-realtime audio monitoring, t
 
 **User contact files (`users.json`, `users.dev.json`) are NOT tracked in version control and reside in the `app/users/data/` directory.**
 
-- Use `app/users/data/users.example.json` and `app/users/data/users.dev.example.json` as templates.
-- Never commit real user files with contact info to the repo—these are ignored by `.gitignore`.
-- For local dev: copy the relevant example file to `app/users/data/users.json` or `users.dev.json` and fill in your info.
-- For production (Render):
-  1. Mount a persistent disk at `/app/app/users/data` in your Render service settings.
-  2. After deploy, use the Render shell to upload or edit your `users.json` file in `/app/app/users/data/`.
-  3. Your user file will persist across deploys and restarts.
+### Local Development
+- Use `app/users/data/users.example.json` or `users.dev.example.json` as a template.
+- Copy the relevant example file:
+  ```sh
+  cp app/users/data/users.example.json app/users/data/users.json
+  # or for dev
+  cp app/users/data/users.dev.example.json app/users/data/users.dev.json
+  ```
+- Fill in your info (email, phone, zones, etc.) in your copy.
+- **Do not commit your real user files**—they are gitignored for privacy.
+
+### Production (Render)
+- **Persistent Disk:** Mount a persistent disk at `/app/app/users/data` in your Render service settings.
+- **After Deploy:** Use the Render shell or SCP to upload your real `users.json` to `/app/app/users/data/`.
+  - Example:
+    ```sh
+    scp app/users/data/users.json srv-<id>@ssh.<region>.render.com:/app/app/users/data/users.json
+    ```
+- Your user file will persist across deploys and restarts.
 - If the user file is missing, the app will warn you at startup and not send alerts.
-- See `.gitignore` for details on excluded files and templates.
+
+### Templates & Security
+- Example/template files are provided and tracked for onboarding.
+- Real user files are always excluded by `.gitignore`.
 
 ## Enhancements & Future Directions
 
@@ -42,7 +57,7 @@ A modular Python microservice (micro SaaS) for near-realtime audio monitoring, t
 For domain-specific corrections (e.g., local place names like "Teague Hill" or "Sierra Azul"), consider implementing a post-processing step that automatically replaces common recognition errors in transcripts. This can be accomplished with a simple Python dictionary or more advanced NLP techniques.
 
 ### 2. Fine-Tuning Whisper
-If you collect enough corrected transcripts, you can explore fine-tuning an open-source Whisper model (e.g., via Hugging Face Transformers) to improve recognition of local terminology and reduce recurring errors. This requires some ML expertise and GPU resources, but can significantly boost accuracy for your use case.
+If you collect enough corrected transcripts, you can explore fine-tuning an open-source Whisper model (e.g., via Hugging Face Transformers) to improve recognition of local terminology and reduce recurring errors. This requires some ML expertise and GPU resources, but would be fully sickner.
 
 Contributions for either approach are welcome! See `data/transcripts/` for example transcript files.
 
