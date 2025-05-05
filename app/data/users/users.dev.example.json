@@ -1,0 +1,10 @@
+[
+  {
+    "id": "devuser@example.com",
+    "email": "devuser@example.com",
+    "phone": "+15555550999",
+    "zones": ["Teague Hill", "Sierra Azul"],
+    "created_at": "2025-01-01T00:00:00Z",
+    "keywords": ["Mountain View"]
+  }
+]

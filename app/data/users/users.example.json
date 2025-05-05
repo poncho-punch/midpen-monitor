@@ -1,0 +1,10 @@
+[
+  {
+    "id": "sample@example.com",
+    "email": "sample@example.com",
+    "phone": "+15555550123",
+    "zones": ["El Corte de Madera", "Russian Ridge"],
+    "created_at": "2025-01-01T00:00:00Z",
+    "keywords": ["Welfare Check"]
+  }
+]
