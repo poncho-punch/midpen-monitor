@@ -115,7 +115,7 @@ midpen-monitor/
     "phone": "+15555555555",
     "zones": ["El Corte de Madera", "Russian Ridge", "Windy Hill", "Teague Hill", "Purisima"],
     "created_at": "2025-05-04T20:19:49Z",
-    "keywords": ["Mountain View", "Cupertino", "Sunnyvale"]
+    "keywords": ["Fire on the Mountain", "Mountain Lion"]
   }
 ]
 ```
@@ -140,6 +140,11 @@ midpen-monitor/
 ---
 
 ## Running the App
+
+> **Controlling the Start Date:**
+> 
+> To process audio from a specific date, set the `AUDIO_DAY` environment variable (e.g., `AUDIO_DAY=2025-05-05`). This can be done in your `.env` file, in your container platform's environment variable settings, or directly in your Docker run command. If you do not set `AUDIO_DAY`, the app will start from today (UTC) by default.
+
 1. **Build and start the service:**
    ```sh
    docker compose up --build
@@ -213,9 +218,8 @@ The following zones are available for alert selection:
      -e AUDIO_DAY=2025-05-04 \
      midpen-monitor
    ```
-
-   - Omit `AUDIO_DAY` to start from today (UTC).
-   - Audio and transcripts are stored in `data/audio/` and `data/transcripts/`.
+   > **Note:** You can set the `AUDIO_DAY` environment variable in any container platform (e.g., Docker, Render, Fly.io, Railway) to control which day the monitoring process starts from. This works whether you set it in a `.env` file, via the platform's dashboard, or as part of your container run command. If omitted, the app defaults to starting from today (UTC).
+- Audio and transcripts are stored in `data/audio/` and `data/transcripts/`.
 
 ## Extensibility
 
