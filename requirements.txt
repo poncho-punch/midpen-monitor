@@ -1,0 +1,4 @@
+requests==2.31.0
+whisper-ctranslate2
+huggingface_hub[hf_xet]
+twilio

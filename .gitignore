@@ -1,0 +1,14 @@
+data/
+logs/
+.env
+.env.*
+*.pyc
+__pycache__/
+.DS_Store
+.vscode/
+midpen-monitor.code-workspace
+
+# Ignore real user files in new data directory
+app/users/data/users.json
+app/users/data/users.dev.json
+

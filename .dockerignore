@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+*.env
+data/
+logs/
+.DS_Store
+.vscode/
+midpen-monitor.code-workspace
+*.log

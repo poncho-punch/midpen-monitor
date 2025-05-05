@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  midpen-monitor:
+    build: .
+    container_name: midpen-monitor
+    env_file:
+      - .env
+    environment:
+      - ALERT_ENV=DEV
+    restart: unless-stopped
+    # Uncomment and adjust if your app exposes a web port
+    # ports:
+    #   - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    # command: ["python3", "-m", "app.main"]
+    # If your Dockerfile already sets CMD, you can omit the above command.
