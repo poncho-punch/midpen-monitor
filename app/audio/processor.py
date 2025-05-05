@@ -191,8 +191,11 @@ class AudioProcessor:
                     logger.warning(f"Failed to delete audio file {audio_path} after failed transcription: {e}")
 
         # --- Polling: monitor for new segments in real time ---
-        logger.info("Initial sweep complete. Entering polling mode for new segments.")
+        logger.info("[POLLING] Initial sweep complete. Entering polling mode for new segments.")
+        print("[POLLING] Initial sweep complete. Entering polling mode for new segments.")
         try:
+            last_heartbeat = time.time()
+            heartbeat_interval = 300  # 5 minutes in seconds
             while True:
                 try:
                     response = requests.get("https://scanrad.io/latest/30", timeout=10)
@@ -244,6 +247,12 @@ class AudioProcessor:
                         logger.warning(f"[Polling] Failed to get latest segment info: {response.status_code} {response.reason}")
                 except Exception as e:
                     logger.warning(f"[Polling] Exception during latest segment polling: {e}")
+                # --- Heartbeat log ---
+                now = time.time()
+                if now - last_heartbeat > heartbeat_interval:
+                    logger.info("[POLLING] Still active, waiting for new segments...")
+                    print("[POLLING] Still active, waiting for new segments...")
+                    last_heartbeat = now
                 time.sleep(5)
         except KeyboardInterrupt:
             logger.info("Polling loop interrupted by user. Exiting.")
