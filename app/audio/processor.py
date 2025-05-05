@@ -43,26 +43,17 @@ class AudioProcessor:
                 content = response.content
                 # Check content type
                 if not content_type.startswith("audio/"):
-                    invalid_path = os.path.join(self.audio_dir, f"audio_{unixtime}.err")
-                    with open(invalid_path, "wb") as f:
-                        f.write(content)
-                    logger.error(f"Download did not return audio! Content-Type: {content_type}. Saved invalid response to {invalid_path}")
+                    logger.error(f"Download did not return audio! Content-Type: {content_type}.")
                     logger.error(f"First 200 bytes: {content[:200]!r}")
                     return None
                 # Check file size
                 if len(content) < 2048:
-                    invalid_path = os.path.join(self.audio_dir, f"audio_{unixtime}.err")
-                    with open(invalid_path, "wb") as f:
-                        f.write(content)
-                    logger.error(f"Downloaded audio file is too small ({len(content)} bytes). Saved to {invalid_path}")
+                    logger.error(f"Downloaded audio file is too small ({len(content)} bytes).")
                     logger.error(f"First 200 bytes: {content[:200]!r}")
                     return None
                 # Check MP3 magic bytes (should start with 'ID3' or 0xFF 0xFB)
                 if not (content[:3] == b'ID3' or (len(content) > 2 and content[0] == 0xFF and (content[1] & 0xE0) == 0xE0)):
-                    invalid_path = os.path.join(self.audio_dir, f"audio_{unixtime}.err")
-                    with open(invalid_path, "wb") as f:
-                        f.write(content)
-                    logger.error(f"Downloaded file does not appear to be a valid MP3 (bad magic bytes). Saved to {invalid_path}")
+                    logger.error(f"Downloaded file does not appear to be a valid MP3 (bad magic bytes).")
                     logger.error(f"First 200 bytes: {content[:200]!r}")
                     return None
                 with open(audio_path, "wb") as f:
