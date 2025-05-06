@@ -57,6 +57,14 @@ class AlertManager:
             event_dt_utc = datetime.fromtimestamp(event_unixtime, tz=timezone.utc)
         else:
             event_dt_utc = datetime.utcnow().replace(microsecond=0, tzinfo=timezone.utc)
+        # Freshness check: only alert if event is less than 1 hour old
+        now_utc = datetime.now(timezone.utc)
+        event_age_seconds = (now_utc - event_dt_utc).total_seconds()
+        if event_age_seconds > 3600:
+            import logging
+            logger = logging.getLogger("alerts.alert_manager")
+            logger.info(f"[AlertManager] Skipping alert for old segment: event age {event_age_seconds/60:.1f} min > 60 min")
+            return
         user_timezone = user_prefs.get("timezone")
         local_time_str = None
         if user_timezone:

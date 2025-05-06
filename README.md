@@ -124,6 +124,7 @@ midpen-monitor/
 
 ## Alert & Notification System
 - Automated email alerts are sent when a transcript contains a user zone or keyword.
+- **Freshness logic:** Alerts are only sent for events less than 1 hour old. If an audio segment or transcript is older than 1 hour at the time of processing, the alert is automatically skipped and a log message is recorded. This prevents "catch-up" notifications for old events after a redeploy or downtime, ensuring you only receive timely, relevant alerts.
 - Uses Namecheap Private Email SMTP (or compatible) for outbound mail.
 
 ### Environment Setup
