@@ -75,11 +75,27 @@ class AlertManager:
             except Exception as e:
                 local_time_str = None  # Fallback if error
         subject = f"Midpen Monitor Alert [{alert_env}]"
+        # --- Render-style event time formatting ---
+        # PDT: May 5 10:27:53 PM
+        # UTC: May 6 05:27:53 AM
+        # Timestamp: 1746509273991
+        pdt_time_str = None
+        try:
+            from zoneinfo import ZoneInfo
+            pdt_zone = ZoneInfo("America/Los_Angeles")
+            pdt_time = event_dt_utc.astimezone(pdt_zone)
+            pdt_time_str = pdt_time.strftime("%b %e %I:%M:%S %p %Z")
+        except Exception:
+            pass
+        utc_time_str = event_dt_utc.strftime("%b %e %I:%M:%S %p UTC")
+        unix_ms = int(event_dt_utc.timestamp() * 1000)
         body = f"Environment: {alert_env}\n"
+        if pdt_time_str:
+            body += f"PDT: {pdt_time_str}\n"
+        body += f"UTC: {utc_time_str}\n"
+        body += f"Timestamp: {unix_ms}\n"
         if local_time_str:
-            body += f"Event Time: {local_time_str}\n"
-        else:
-            body += f"Event Time (UTC): {event_dt_utc.strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
+            body += f"Local Event Time: {local_time_str}\n"
         body += f"Keyword/Zone: '{matched_keyword}' detected in transcript:\n{transcript}"
 
         if alert_type == "email" and email:
