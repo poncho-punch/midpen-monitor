@@ -191,6 +191,7 @@ class AudioProcessor:
             if not audio_path:
                 record_result('invalid', unixtime, segment_age, reason='download failed or invalid audio')
                 logger.warning(f"[Sweep] Failed to download segment at {dt.isoformat()}")
+                processed.add(unixtime)
                 continue
             success = self.transcribe_audio(audio_path)
             if success:
@@ -259,6 +260,7 @@ class AudioProcessor:
                             if not audio_path:
                                 record_result('invalid', latest_unixtime, age, reason='download failed or invalid audio')
                                 logger.warning(f"[Polling] Failed to download segment: {latest_unixtime}")
+                                processed.add(latest_unixtime)
                                 continue
                             try:
                                 from mutagen.mp3 import MP3
