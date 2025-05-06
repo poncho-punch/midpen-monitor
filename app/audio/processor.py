@@ -109,6 +109,36 @@ class AudioProcessor:
         """
         import threading
         import time
+        from collections import deque
+
+        # Adaptive backoff parameters
+        backoff_seconds = 300  # Start at 5 min
+        min_backoff = 180      # Minimum 3 min
+        max_backoff = 900      # Maximum 15 min
+        window_size = 10
+        recent_results = deque(maxlen=window_size)
+
+        def log_backoff_change(new_backoff, reason, window):
+            logger.info(f"[AdaptiveBackoff] Backoff now {new_backoff//60}m ({new_backoff}s) due to {reason}. Window: {list(window)}")
+
+        def update_backoff():
+            nonlocal backoff_seconds
+            invalid_count = recent_results.count('invalid')
+            if invalid_count > 2 and backoff_seconds < max_backoff:
+                backoff_seconds = min(backoff_seconds + 60, max_backoff)
+                log_backoff_change(backoff_seconds, f"{invalid_count} invalid in last {window_size}", recent_results)
+            elif invalid_count == 0 and len(recent_results) == window_size and backoff_seconds > min_backoff:
+                backoff_seconds = max(backoff_seconds - 30, min_backoff)
+                log_backoff_change(backoff_seconds, "all valid in window", recent_results)
+
+        def record_result(result, unixtime, age, reason=None):
+            recent_results.append(result)
+            if result == 'valid':
+                logger.info(f"[AdaptiveBackoff] Segment {unixtime} (age: {int(age)}s): valid")
+            else:
+                logger.info(f"[AdaptiveBackoff] Segment {unixtime} (age: {int(age)}s): invalid ({reason})")
+            update_backoff()
+
         def periodic_cleanup():
             try:
                 from scripts.cleanup_orphaned_audio import main as cleanup_orphaned_audio
@@ -147,18 +177,24 @@ class AudioProcessor:
                 processed.add(unixtime)
                 continue
             segment_age = time.time() - unixtime
-            if segment_age < 300:
-                logger.info(f"[Sweep] Segment {unixtime} is too recent (age: {int(segment_age)}s), waiting at least 5 minutes before processing.")
+            now_dt = datetime.utcfromtimestamp(time.time())
+            lag_seconds = int(time.time() - unixtime)
+            lag_minutes = lag_seconds // 60
+            logger.info(f"[Sweep] Segment {dt.isoformat()} (unixtime {unixtime}) | Now: {now_dt.isoformat()} | Lag: {lag_seconds}s ({lag_minutes}m)")
+            if segment_age < backoff_seconds:
+                logger.info(f"[Sweep] Segment {unixtime} is too recent (age: {int(segment_age)}s), waiting at least {backoff_seconds//60} minutes before processing.")
                 continue
             logger.info(f"[Sweep] Processing segment at {dt.isoformat()} (unixtime {unixtime})")
             audio_path = self.download_audio(unixtime, duration=segment_duration)
             if not audio_path:
+                record_result('invalid', unixtime, segment_age, reason='download failed or invalid audio')
                 logger.warning(f"[Sweep] Failed to download segment at {dt.isoformat()}")
                 continue
             success = self.transcribe_audio(audio_path)
             if success:
                 print(f"[Sweep] Transcript (json) written for: {audio_path}")
                 processed.add(unixtime)
+                record_result('valid', unixtime, segment_age)
                 # --- Alert logic ---
                 try:
                     import json
@@ -212,18 +248,22 @@ class AudioProcessor:
                         if latest_unixtime and latest_unixtime not in processed:
                             import time
                             age = time.time() - latest_unixtime
-                            if age < 300:
-                                logger.info(f"[Polling] Segment {latest_unixtime} is too recent (age: {int(age)}s), waiting at least 5 minutes before processing.")
+                            if age < backoff_seconds:
+                                logger.info(f"[Polling] Segment {latest_unixtime} is too recent (age: {int(age)}s), waiting at least {backoff_seconds//60} minutes before processing.")
                                 time.sleep(30)  # Sleep 30s to reduce log spam and unnecessary polling
                                 continue
                             logger.info(f"[Polling] New segment detected: unixtime {latest_unixtime}")
                             audio_path = self.download_audio(latest_unixtime, duration=segment_duration)
-                            if audio_path:
-                                success = self.transcribe_audio(audio_path)
-                                if success:
-                                    print(f"[Polling] Transcript (json) written for: {audio_path}")
-                                    processed.add(latest_unixtime)
-                                    # --- Alert logic ---
+                            if not audio_path:
+                                record_result('invalid', latest_unixtime, age, reason='download failed or invalid audio')
+                                logger.warning(f"[Polling] Failed to download segment: {latest_unixtime}")
+                                continue
+                            success = self.transcribe_audio(audio_path)
+                            if success:
+                                print(f"[Polling] Transcript (json) written for: {audio_path}")
+                                processed.add(latest_unixtime)
+                                record_result('valid', latest_unixtime, age)
+                                # --- Alert logic ---
                                     try:
                                         import json
                                         from app.alerts.alert_manager import AlertManager
