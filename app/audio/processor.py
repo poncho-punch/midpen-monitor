@@ -172,6 +172,7 @@ class AudioProcessor:
         processed = set()
 
         # --- Sweep: process all missing segments for the day so far ---
+        sweep_fail_count = 0
         for dt in self.daterange(start_dt, datetime.utcnow(), timedelta(seconds=segment_duration)):
             unixtime = int(dt.timestamp())
             json_path = os.path.join(self.transcript_dir, f"audio_{unixtime}.json")
