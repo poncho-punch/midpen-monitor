@@ -31,6 +31,7 @@ class AudioProcessor:
                     attempt += 1
                     if attempt == max_retries:
                         logger.error(f"Failed to download audio after {max_retries} attempts (500 errors) for url: {url}")
+                        processed.add(unixtime)  # Mark this segment as processed to avoid retrying endlessly
                         return None
                     delay = base_delay * (2 ** (attempt - 1)) * random.uniform(0.8, 1.2)
                     logger.warning(f"HTTP 500 error on attempt {attempt}/{max_retries}. Retrying in {delay:.1f} seconds...")
