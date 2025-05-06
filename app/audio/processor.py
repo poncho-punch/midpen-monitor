@@ -147,6 +147,10 @@ class AudioProcessor:
             if os.path.exists(json_path):
                 processed.add(unixtime)
                 continue
+            segment_age = time.time() - unixtime
+            if segment_age < 300:
+                logger.info(f"[Sweep] Segment {unixtime} is too recent (age: {int(segment_age)}s), waiting at least 5 minutes before processing.")
+                continue
             logger.info(f"[Sweep] Processing segment at {dt.isoformat()} (unixtime {unixtime})")
             audio_path = self.download_audio(unixtime, duration=segment_duration)
             if not audio_path:
