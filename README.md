@@ -1,7 +1,7 @@
 # Midpen Monitor
 
 This project runs a modular Python microservice (micro SaaS) in a Docker container that:
-- Downloads every 1-minute audio segment for a full day from `scanrad.io`.
+- Downloads every 90-second audio segment for a full day from `scanrad.io`.
 - Transcribes each segment using `whisper-ctranslate2` (medium model, English language).
 - Produces a `.json` transcript file for each segment, and deletes the `.mp3` after transcription.
 - After processing all available segments for the specified day, the script continues running and periodically checks for new segments, transcribing them as soon as they become available (continuous watch mode).
@@ -15,7 +15,7 @@ The application is fully containerized using a minimal Python 3.11 slim base ima
 A modular Python microservice (micro SaaS) for near-realtime audio monitoring, transcription, and alerting.
 
 ### Key Features
-- Downloads and transcribes 1-minute audio segments from `scanrad.io`.
+- Downloads and transcribes 90-second (1.5-minute) audio segments from `scanrad.io`.
 - Produces `.json` transcript files and deletes audio after transcription.
 - Continuously monitors for new segments, rolling over to each new day.
 - Sends automated email alerts when user-defined zones or keywords are detected in transcripts.

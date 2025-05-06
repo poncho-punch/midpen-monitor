@@ -15,7 +15,7 @@ class AudioProcessor:
         os.makedirs(self.audio_dir, exist_ok=True)
         os.makedirs(self.transcript_dir, exist_ok=True)
 
-    def download_audio(self, unixtime, duration=60):
+    def download_audio(self, unixtime, duration=90):
         import random
         url = f"https://scanrad.io/download/30/{unixtime}?t={duration}"
         logger.info(f"API URL used for download: {url}")
@@ -118,7 +118,7 @@ class AudioProcessor:
                 time.sleep(3600)  # every hour
         threading.Thread(target=periodic_cleanup, daemon=True).start()
 
-        segment_duration = 60  # seconds (1 minute)
+        segment_duration = 90  # seconds (1.5 minutes)
         if start_day:
             try:
                 current_start_dt = datetime.strptime(start_day, "%Y-%m-%d")
