@@ -204,6 +204,7 @@ class AudioProcessor:
                             age = time.time() - latest_unixtime
                             if age < 180:
                                 logger.info(f"[Polling] Segment {latest_unixtime} is too recent (age: {int(age)}s), waiting at least 3 minutes before processing.")
+                                time.sleep(30)  # Sleep 30s to reduce log spam and unnecessary polling
                                 continue
                             logger.info(f"[Polling] New segment detected: unixtime {latest_unixtime}")
                             audio_path = self.download_audio(latest_unixtime, duration=segment_duration)
