@@ -258,38 +258,46 @@ class AudioProcessor:
                                 record_result('invalid', latest_unixtime, age, reason='download failed or invalid audio')
                                 logger.warning(f"[Polling] Failed to download segment: {latest_unixtime}")
                                 continue
+                            try:
+                                from mutagen.mp3 import MP3
+                                audio = MP3(audio_path)
+                                if audio.info.length <= 3.0:
+                                    logger.info(f"[Skip] Audio segment {latest_unixtime} is {audio.info.length:.2f}s (open key event?), skipping transcription.")
+                                    continue
+                            except Exception as e:
+                                logger.warning(f"[Polling] Failed to check audio duration for {audio_path}: {e}")
                             success = self.transcribe_audio(audio_path)
                             if success:
                                 print(f"[Polling] Transcript (json) written for: {audio_path}")
                                 processed.add(latest_unixtime)
                                 record_result('valid', latest_unixtime, age)
                                 # --- Alert logic ---
-                                    try:
-                                        import json
-                                        from app.alerts.alert_manager import AlertManager
-                                        from app.users import user_store
-                                        base = os.path.splitext(os.path.basename(audio_path))[0]
-                                        json_path = os.path.join(self.transcript_dir, f"{base}.json")
-                                        with open(json_path, "r") as f:
-                                            transcript_data = json.load(f)
-                                        transcript_text = transcript_data.get("text", "")
-                                        users = user_store.load_users()
-                                        alert_manager = AlertManager()
-                                        for user in users:
-                                            logger.info(f"[Alert Debug] Checking alerts for user: {user.get('email')}")
-                                            logger.info(f"[Alert Debug] User zones: {user.get('zones', [])}, keywords: {user.get('keywords', [])}")
-                                            logger.info(f"[Alert Debug] Transcript snippet: {transcript_text[:120]}")
-                                            alert_manager.check_and_trigger(transcript_text, user, alert_type="email", event_unixtime=latest_unixtime)
-                                    except Exception as e:
-                                        logger.warning(f"Error during alert check: {e}")
-                                    try:
-                                        os.remove(audio_path)
-                                        logger.info(f"Deleted audio file {audio_path}")
-                                    except Exception as e:
-                                        logger.warning(f"Failed to delete audio file {audio_path}: {e}")
-                                else:
-                                    logger.warning(f"[Polling] Transcription failed for: {audio_path}. Audio file kept for debugging.")
-                                    logger.warning(f"You can manually inspect or retry transcription for: {audio_path}")
+                                try:
+                                    import json
+                                    from app.alerts.alert_manager import AlertManager
+                                    from app.users import user_store
+                                    base = os.path.splitext(os.path.basename(audio_path))[0]
+                                    json_path = os.path.join(self.transcript_dir, f"{base}.json")
+                                    with open(json_path, "r") as f:
+                                        transcript_data = json.load(f)
+                                    transcript_text = transcript_data.get("text", "")
+                                    users = user_store.load_users()
+                                    alert_manager = AlertManager()
+                                    for user in users:
+                                        logger.info(f"[Alert Debug] Checking alerts for user: {user.get('email')}")
+                                        logger.info(f"[Alert Debug] User zones: {user.get('zones', [])}, keywords: {user.get('keywords', [])}")
+                                        logger.info(f"[Alert Debug] Transcript snippet: {transcript_text[:120]}")
+                                        alert_manager.check_and_trigger(transcript_text, user, alert_type="email", event_unixtime=latest_unixtime)
+                                except Exception as e:
+                                    logger.warning(f"Error during alert check: {e}")
+                                try:
+                                    os.remove(audio_path)
+                                    logger.info(f"Deleted audio file {audio_path}")
+                                except Exception as e:
+                                    logger.warning(f"Failed to delete audio file {audio_path}: {e}")
+                            else:
+                                logger.warning(f"[Polling] Transcription failed for: {audio_path}. Audio file kept for debugging.")
+                                logger.warning(f"You can manually inspect or retry transcription for: {audio_path}")
                     else:
                         logger.warning(f"[Polling] Failed to get latest segment info: {response.status_code} {response.reason}")
                 except Exception as e:
