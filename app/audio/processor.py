@@ -47,6 +47,12 @@ class AudioProcessor:
                     logger.error(f"Download did not return audio! Content-Type: {content_type}.")
                     logger.error(f"First 200 bytes: {content[:200]!r}")
                     return None
+                # Check for HTML error page masquerading as audio
+                html_signatures = [b'<html', b'<!doctype', b'<head', b'<body', b'no video with supported format']
+                first_512 = content[:512].lower()
+                if any(sig in first_512 for sig in html_signatures):
+                    logger.error(f"Downloaded file appears to be HTML, not audio. Skipping segment. First 200 bytes: {content[:200]!r}")
+                    return None
                 # Check file size
                 if len(content) < 2048:
                     logger.error(f"Downloaded audio file is too small ({len(content)} bytes).")
@@ -203,8 +209,8 @@ class AudioProcessor:
                         if latest_unixtime and latest_unixtime not in processed:
                             import time
                             age = time.time() - latest_unixtime
-                            if age < 180:
-                                logger.info(f"[Polling] Segment {latest_unixtime} is too recent (age: {int(age)}s), waiting at least 3 minutes before processing.")
+                            if age < 300:
+                                logger.info(f"[Polling] Segment {latest_unixtime} is too recent (age: {int(age)}s), waiting at least 5 minutes before processing.")
                                 time.sleep(30)  # Sleep 30s to reduce log spam and unnecessary polling
                                 continue
                             logger.info(f"[Polling] New segment detected: unixtime {latest_unixtime}")
