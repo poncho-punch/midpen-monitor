@@ -112,9 +112,11 @@ class AudioProcessor:
         from collections import deque
 
         # Adaptive backoff parameters
+        import os
         backoff_seconds = 300  # Start at 5 min
         min_backoff = 180      # Minimum 3 min
-        max_backoff = 900      # Maximum 15 min
+        max_backoff = int(os.environ.get('MAX_BACKOFF_SECONDS', 900))  # Maximum, env override
+        logger.info(f"[AdaptiveBackoff] max_backoff set to {max_backoff//60}m ({max_backoff}s) via environment or default.")
         window_size = 10
         recent_results = deque(maxlen=window_size)
 
