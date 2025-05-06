@@ -241,6 +241,20 @@ class AudioProcessor:
             while True:
                 try:
                     response = requests.get("https://scanrad.io/latest/30", timeout=10)
+                    if response.status_code == 200:
+                        latest_info = response.json()
+                        if isinstance(latest_info, dict):
+                            latest_unixtime = int(latest_info.get("unixtime") or latest_info.get("timestamp") or 0)
+                        elif isinstance(latest_info, int):
+                            latest_unixtime = latest_info
+                        else:
+                            logger.warning(f"[Polling] Unexpected response type: {type(latest_info)} - {latest_info}")
+                            latest_unixtime = 0
+                        if latest_unixtime and latest_unixtime not in processed:
+                            import time
+                            age = time.time() - latest_unixtime
+                            if age < backoff_seconds:
+                                logger.info(f"[Polling] Segment {latest_unixtime} is too recent (age: {int(age)}s), waiting at least {backoff_seconds//60} minutes before processing.")
                                 time.sleep(30)  # Sleep 30s to reduce log spam and unnecessary polling
                                 continue
                             logger.info(f"[Polling] New segment detected: unixtime {latest_unixtime}")
