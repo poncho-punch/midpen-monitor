@@ -190,7 +190,9 @@ class AudioProcessor:
             audio_path = self.download_audio(unixtime, duration=segment_duration)
             if not audio_path:
                 record_result('invalid', unixtime, segment_age, reason='download failed or invalid audio')
-                logger.warning(f"[Sweep] Failed to download segment at {dt.isoformat()}")
+                sweep_fail_count += 1
+                if sweep_fail_count % 10 == 1:
+                    logger.warning(f"[Sweep] Failed to download segment at {dt.isoformat()} (failure #{sweep_fail_count})")
                 processed.add(unixtime)
                 continue
             success = self.transcribe_audio(audio_path)
