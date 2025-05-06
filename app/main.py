@@ -10,6 +10,9 @@ from app.notifications.notifier import Notifier
 
 # Future: add API endpoints, DB setup, and orchestrate the workflow
 
+import logging
+logging.basicConfig(level=logging.INFO)
+
 def main():
     print("Midpen Monitor micro SaaS service starting...")
     from app.audio.processor import AudioProcessor
