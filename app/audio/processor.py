@@ -172,6 +172,8 @@ class AudioProcessor:
         processed = set()
 
         # --- Sweep: process all missing segments for the day so far ---
+        # Configurable max segment age for sweep (default: 1 hour)
+        max_segment_age = int(os.environ.get('MAX_SEGMENT_AGE_SECONDS', 3600))
         sweep_fail_count = 0
         for dt in self.daterange(start_dt, datetime.utcnow(), timedelta(seconds=segment_duration)):
             unixtime = int(dt.timestamp())
@@ -184,6 +186,10 @@ class AudioProcessor:
             lag_seconds = int(time.time() - unixtime)
             lag_minutes = lag_seconds // 60
             logger.info(f"[Sweep] Segment {dt.isoformat()} (unixtime {unixtime}) | Now: {now_dt.isoformat()} | Lag: {lag_seconds}s ({lag_minutes}m)")
+            # Skip segments older than max_segment_age
+            if segment_age > max_segment_age:
+                logger.info(f"[Sweep] Segment {unixtime} is too old (age: {int(segment_age)}s), skipping (max allowed: {max_segment_age}s)")
+                continue
             if segment_age < backoff_seconds:
                 logger.info(f"[Sweep] Segment {unixtime} is too recent (age: {int(segment_age)}s), waiting at least {backoff_seconds//60} minutes before processing.")
                 continue
